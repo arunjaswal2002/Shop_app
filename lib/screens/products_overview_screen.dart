@@ -1,61 +1,56 @@
 import 'package:flutter/material.dart';
-import '../models/product.dart';
 
-import '../widgets/product_item.dart';
+import '../widgets/products_grid.dart';
+import 'package:provider/provider.dart';
+// import '../providers/products.dart';
+import '../widgets/badge.dart';
+import '../providers/cart.dart';
 
-class ProductsOverviewScreen extends StatelessWidget {
-  // const ProductsOverviewScreen({Key? key}) : super(key: key);
-  final List<Product> loadedProducts = [
-    Product(
-      id: 'p1',
-      title: 'Red Shirt',
-      description: 'A red shirt - it is pretty red!',
-      price: 29.99,
-      imageUrl:
-          'https://cdn.pixabay.com/photo/2016/10/02/22/17/red-t-shirt-1710578_1280.jpg',
-    ),
-    Product(
-      id: 'p2',
-      title: 'Trousers',
-      description: 'A nice pair of trousers.',
-      price: 59.99,
-      imageUrl:
-          'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Trousers%2C_dress_%28AM_1960.022-8%29.jpg/512px-Trousers%2C_dress_%28AM_1960.022-8%29.jpg',
-    ),
-    Product(
-      id: 'p3',
-      title: 'Yellow Scarf',
-      description: 'Warm and cozy - exactly what you need for the winter.',
-      price: 19.99,
-      imageUrl:
-          'https://live.staticflickr.com/4043/4438260868_cc79b3369d_z.jpg',
-    ),
-    Product(
-      id: 'p4',
-      title: 'A Pan',
-      description: 'Prepare any meal you want.',
-      price: 49.99,
-      imageUrl:
-          'https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Cast-Iron-Pan.jpg/1024px-Cast-Iron-Pan.jpg',
-    ),
-  ];
+enum FilterOptions { favorites, all }
+
+class ProductsOverviewScreen extends StatefulWidget {
+  @override
+  State<ProductsOverviewScreen> createState() => _ProductsOverviewScreenState();
+}
+
+class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
+  var _showOnlyFavorites = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(title: const Text('MyShop')),
-        body: GridView.builder(
-          padding: const EdgeInsets.all(10.0),
-          itemCount: loadedProducts.length,
-          itemBuilder: (_, index) => ProductItem(loadedProducts[index].id,
-              loadedProducts[index].title, loadedProducts[index].imageUrl),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            mainAxisSpacing: 10,
-            crossAxisSpacing: 10,
-            childAspectRatio: 3 / 2,
+      appBar: AppBar(title: const Text('MyShop'), actions: <Widget>[
+        PopupMenuButton(
+            onSelected: (FilterOptions selectedvalue) {
+              setState(() {
+                if (selectedvalue == FilterOptions.favorites) {
+                  _showOnlyFavorites = true;
+                } else {
+                  _showOnlyFavorites = false;
+                }
+              });
+            },
+            itemBuilder: (_) => [
+                  const PopupMenuItem(
+                      // ignore: sort_child_properties_last
+                      child: Text('Only Favorites'),
+                      value: FilterOptions.favorites),
+                  const PopupMenuItem(
+                      // ignore: sort_child_properties_last
+                      child: Text('Show All'),
+                      value: FilterOptions.all),
+                ],
+            child: const Icon(Icons.more_vert)),
+        Consumer<Cart>(
+          builder: (_, cart, ch) => Badge(
+            child: ch as Widget,
+            value: cart.cartItems.toString(),
           ),
-        ) //GridView because it will not render the useless product which are not vsisble
-        );
+          child: IconButton(icon: Icon(Icons.shopping_cart), onPressed: () {}),
+        ),
+      ]),
+      body: ProductsGrid(_showOnlyFavorites),
+      
+    );
   }
 }
