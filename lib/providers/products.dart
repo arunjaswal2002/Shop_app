@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-
+import 'dart:convert';
 import 'product.dart';
+import 'package:http/http.dart' as http;
 
 class Products with ChangeNotifier {
   // ignore: prefer_final_fields
@@ -64,22 +65,40 @@ class Products with ChangeNotifier {
     return _items.where((prod) => prod.isFavorite).toList();
   }
 
-  void addProduct(Product product) {
-    // _items.add(value);
-    final _pr = Product(
-        id: DateTime.now().toString(),
-        price: product.price,
-        description: product.description,
-        title: product.title,
-        imageUrl: product.imageUrl);
+  Future<void> addProduct(Product product) {
+    final url = Uri.parse(
+        'https://myshopproject-65c79-default-rtdb.firebaseio.com/products.json');
 
-    _items.add(_pr);
-    notifyListeners();
+    return http
+        .post(url,
+            body: json.encode({
+              'title': product.title,
+              'price': product.price,
+              'description': product.description,
+              'imageUrl': product.imageUrl,
+              'isFavorite': product.isFavorite
+            }))
+        .then((postResponse) {
+      final _pr = Product(
+          id: json.decode(postResponse.body)['name'],
+          price: product.price,
+          description: product.description,
+          title: product.title,
+          imageUrl: product.imageUrl);
+
+      _items.add(_pr);
+      notifyListeners();
+    });
+    // _items.add(value);
+
+    
   }
 
   void editProduct(String id, Product newProduct) {
     final productIndex = _items.indexWhere((item) => item.id == id);
-
+    if (productIndex < 0) {
+      return;
+    }
     _items[productIndex] = newProduct;
     notifyListeners();
   }
