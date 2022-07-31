@@ -65,20 +65,20 @@ class Products with ChangeNotifier {
     return _items.where((prod) => prod.isFavorite).toList();
   }
 
-  Future<void> addProduct(Product product) {
+  Future<void> addProduct(Product product) async {
     final url = Uri.parse(
         'https://myshopproject-65c79-default-rtdb.firebaseio.com/products.json');
+    try {
+      final postResponse = await http.post(url,
+          body: json.encode({
+            'title': product.title,
+            'price': product.price,
+            'description': product.description,
+            'imageUrl': product.imageUrl,
+            'isFavorite': product.isFavorite
+          }));
 
-    return http
-        .post(url,
-            body: json.encode({
-              'title': product.title,
-              'price': product.price,
-              'description': product.description,
-              'imageUrl': product.imageUrl,
-              'isFavorite': product.isFavorite
-            }))
-        .then((postResponse) {
+      //it will execute after the post request comes back
       final _pr = Product(
           id: json.decode(postResponse.body)['name'],
           price: product.price,
@@ -88,10 +88,15 @@ class Products with ChangeNotifier {
 
       _items.add(_pr);
       notifyListeners();
-    });
-    // _items.add(value);
+    } catch (error) {
+      throw error;
+    }
+    // print(error);
+    // // return Future.error(error);
+    // throw error;
+    //this will generate a new error and forward it to the editAddProfuctSCREEN
 
-    
+    // _items.add(value);
   }
 
   void editProduct(String id, Product newProduct) {
