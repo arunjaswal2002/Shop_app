@@ -3,7 +3,7 @@ import 'package:shop_app/screens/cart_screen.dart';
 
 import '../widgets/products_grid.dart';
 import 'package:provider/provider.dart';
-// import '../providers/products.dart';
+import '../providers/products.dart';
 import '../widgets/badge.dart';
 import '../providers/cart.dart';
 import '../widgets/app_drawer.dart';
@@ -17,11 +17,33 @@ class ProductsOverviewScreen extends StatefulWidget {
 
 class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
   var _showOnlyFavorites = false;
+  var flag = true;
+  var showLoadingSpinner = false;
+
+  @override
+  void didChangeDependencies() { // Both init state and didChangeDependencies are called before the build and if we want to use context outside our build method then we use didChangeDependencies.
+  //Did changedependencies are called after the state loads its dependencies.
+  //But initState is called before the state call its dependencies.
+    // TODO: implement didChangeDependencies
+    if (flag) {
+      setState(() {
+        showLoadingSpinner = true;
+      });
+      Provider.of<Products>(context).fetchAndSetProduct().then((_) {
+        setState(() {
+          showLoadingSpinner = false;
+        });
+      });
+      flag = false;
+    }
+    super.didChangeDependencies();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('MyShop'), actions: <Widget>[
+      appBar: AppBar(title: const Text('MyShop'),
+       actions: <Widget>[
         PopupMenuButton(
             onSelected: (FilterOptions selectedvalue) {
               setState(() {
@@ -56,7 +78,9 @@ class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
         ),
       ]),
       drawer: AppDrawer(),
-      body: ProductsGrid(_showOnlyFavorites),
+      body: showLoadingSpinner
+          ? const Center(child: CircularProgressIndicator())
+          : ProductsGrid(_showOnlyFavorites),
     );
   }
 }
